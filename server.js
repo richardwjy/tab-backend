@@ -17,7 +17,7 @@ app.get('/how-to-get', async (req, res) => {
         return res.json(data);
     } catch (err) {
         // console.error(err);
-        console.log(err.response.config);
+        console.log(err.response);
         return res.send("Error!")
     }
 })
@@ -30,8 +30,9 @@ app.post('/how-to-post', async (req, res) => {
         return res.json(data);
     } catch (err) {
         // console.error(err);
-        console.log(err.response.config);
-        return res.send("Error!")
+        console.log(err.message);
+        console.log(err.response);
+        return res.send("Error!");
     }
 })
 
