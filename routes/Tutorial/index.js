@@ -1,6 +1,15 @@
 const router = require("express").Router();
+const OAuth = require("../../services/oauth");
 const { axiosGet, axiosPost } = require("../../services/axios");
 const { Client } = require('pg');
+
+router.get('/generate-oauth', async (req, res) => {
+    // Silahkan diisi query parameters
+    const { query } = req;
+    const stringified = JSON.stringify({ token: OAuth({ ...query, httpmethod: req.method }) });
+    console.log(JSON.parse(stringified))
+    return res.json({ token: stringified });
+})
 
 router.get('/how-to-get', async (req, res) => {
     // console.log({ token: OAuth({ script: 323, deploy: 1, httpmethod: "GET" }) });
