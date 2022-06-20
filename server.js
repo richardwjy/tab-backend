@@ -1,4 +1,6 @@
 const express = require('express')
+const dotnev = require('dotenv')
+dotnev.config()
 const app = express()
 const port = 3000
 
