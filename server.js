@@ -4,9 +4,9 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 dotnev.config();
 const app = express();
-const port = 3000;
+const PORT = 3000;
 
-const routes = require("./routes/routes");
+const route = require("./routes/routes");
 
 app.use(
   express.urlencoded({
@@ -14,7 +14,6 @@ app.use(
   })
 );
 app.use(cookieParser());
-app.use(express.json());
 app.use(
   cors({
     credentials: true,
@@ -23,8 +22,9 @@ app.use(
   })
 );
 
-app.use("/api", routes);
+app.use(express.json());
+app.use("/v1/api", route);
 
-app.listen(port, () => {
-  console.log(`Anteraja app listening on port ${port}`);
+app.listen(PORT, () => {
+  console.log(`Anteraja app listening on port ${PORT}`);
 });

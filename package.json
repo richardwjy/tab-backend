@@ -13,7 +13,7 @@
     "url": "git+https://github.com/richardwjy/tab-backend.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Richard Metrodata",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/richardwjy/tab-backend/issues"
@@ -23,6 +23,7 @@
     "bcrypt": "^5.0.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "axios": "^0.27.2",
     "crypto-js": "^4.1.1",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
