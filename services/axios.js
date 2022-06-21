@@ -2,7 +2,7 @@ const OAuth = require('./oauth');
 const axios = require('axios');
 
 module.exports = {
-    axiosGet: async (args = {}) => {
+    netsuiteGet: async (args = {}) => {
         return await axios({
             method: "GET",
             url: process.env.NETSUITE_URL,
@@ -15,20 +15,20 @@ module.exports = {
             }
         })
     },
-    axiosPost: async (args = { params: {/* Untuk real parameter */ }, options: {/* Untuk Netsuite */ }, body: {/* Untuk body axios */ } }) => {
-        return await axios({
-            method: "POST",
-            url: process.env.NETSUITE_URL,
-            headers: {
-                'Authorization': OAuth({ ...args.options, httpmethod: "POST" }),
-                'Content-Type': 'application/json'
-            },
-            params: {
-                ...args.params
-            },
-            body: {
-                ...args.body
-            }
-        })
-    }
+    // netsuitePost: async (args = { params: {/* Untuk real parameter */ }, options: {/* Untuk Netsuite */ }, body: {/* Untuk body axios */ } }) => {
+    //     return await axios({
+    //         method: "POST",
+    //         url: process.env.NETSUITE_URL,
+    //         headers: {
+    //             'Authorization': OAuth({ ...args.options, httpmethod: "POST" }),
+    //             'Content-Type': 'application/json'
+    //         },
+    //         params: {
+    //             ...args.params
+    //         },
+    //         body: {
+    //             ...args.body
+    //         }
+    //     })
+    // }
 }

@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const OAuth = require("../../services/oauth");
-const { axiosGet, axiosPost } = require("../../services/axios");
+const { axiosGet } = require("../../services/axios");
 const { Client } = require('pg');
 
 router.get('/generate-oauth', async (req, res) => {
@@ -24,18 +24,18 @@ router.get('/how-to-get', async (req, res) => {
     }
 })
 
-router.post('/how-to-post', async (req, res) => {
-    // http://localhost:5000/v1/api/tutorial/how-to-post
-    try {
-        const { data } = await axiosPost({ params: { script: 323, deploy: 1 }, body: { someJsonString: "Hati hati di jalan!", someJsonId: 22, someJsonBoolean: true } })
-        return res.json(data);
-    } catch (err) {
-        // console.error(err);
-        console.log(err.message);
-        console.log(err.response);
-        return res.send("Error!");
-    }
-})
+// router.post('/how-to-post', async (req, res) => {
+//     // http://localhost:5000/v1/api/tutorial/how-to-post
+//     try {
+//         const { data } = await axiosPost({ params: { script: 323, deploy: 1 }, body: { someJsonString: "Hati hati di jalan!", someJsonId: 22, someJsonBoolean: true } })
+//         return res.json(data);
+//     } catch (err) {
+//         // console.error(err);
+//         console.log(err.message);
+//         console.log(err.response);
+//         return res.send("Error!");
+//     }
+// })
 
 router.get('/how-to-connect-psql', async (req, res) => {
     // http://localhost:5000/v1/api/tutorial/how-to-connect-psql
