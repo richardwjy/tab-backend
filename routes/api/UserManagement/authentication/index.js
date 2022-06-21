@@ -1,6 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const format = require("pg-format");
 // const sworm = require('sworm')
@@ -15,44 +15,81 @@ const {
 const router = express.Router();
 
 const UserTable = process.env.MS_USER;
-
 const pool = require("../../../../config/db");
+
+const isUserExist = async (email, callback) => {
+  let results = false;
+  try {
+    const client = await pool.connect();
+    const query = {
+      text: `SELECT * FROM ${UserTable} where email = $1`,
+      values: [email],
+    };
+    const res = await client.query(query);
+    client.release();
+    if (res.rows.length > 0) {
+      console.log("Enter");
+      results = true;
+    }
+    return results;
+  } catch (err) {
+    console.log(err);
+    return true;
+  }
+};
+
+const insertUserToDatabase = async (newUser) => {
+  let lastRowId;
+  try {
+    // Prepare Data. Hash password
+    const salt = bcrypt.genSaltSync(Number(process.env.SALT_ROUNDS));
+    const hashedPassword = bcrypt.hashSync(newUser.password, salt);
+
+    const client = await pool.connect();
+    const query = {
+      text: `INSERT INTO ${UserTable} (username, email, password,position_id) VALUES($1, $2, $3, $4) RETURNING id`,
+      values: [newUser.username, newUser.email, hashedPassword, 1],
+    };
+    const res = await client.query(query);
+    client.release();
+    lastRowId = res.rows[0].id;
+    return lastRowId;
+  } catch (err) {
+    console.error(err);
+  }
+};
 
 const validateUserInformation = async (user) => {
   try {
     // const db = sworm.db(config);
     const { username, password } = user;
-    pool.connect(function (err, client, done) {
-      if (err) throw new Error(err);
-      //   var query = format(
-      //     `SELECT id,password FROM ${UserTable} WHERE USERNAME='${username}'`
-      //   );
-      var query = format(`SELECT * FROM ${UserTable}`);
-      client.query(query, function (err, res) {
-        if (err) {
-          console.log(err, "asd");
-        }
-        console.log(res.rows[0]);
-      });
-      done();
-    });
+
+    const client = await pool.connect();
+    const query = {
+      text: `SELECT * FROM ${UserTable} where username = $1`,
+      values: [username],
+    };
+    const res = await client.query(query);
+    client.release();
+    // console.log(res.rows[0]);
+    const record = res.rows;
     // const record = await db.query();
 
-    // if (record.length > 0) {
-    //   if (!bcrypt.compareSync(password, record[0].password)) {
-    //     return { status: false, message: "Wrong Password" }; // Will return true/false
-    //   } else {
-    //     delete record[0].password;
-    //     return { status: true, data: record[0] };
-    //   }
-    // }
-    // if (record.length == 0) {
-    //   return { status: false, message: "Not a user" };
-    // }
-    // return { status: false, message: "Not a unique username" };
+    if (record.length > 0) {
+      if (!bcrypt.compareSync(password, record[0].password)) {
+        return { status: false, message: "Wrong Password" }; // Will return true/false
+      } else {
+        delete record[0].password;
+        return { status: true, data: record[0] };
+      }
+    }
+    if (record.length == 0) {
+      return { status: false, message: "Not a user" };
+    }
+    return { status: false, message: "Not a unique username" };
   } catch (err) {
     console.log("Error in validateUserInformation");
-    // console.log(err);
+    console.log(err);
     // return {
     //   status: false,
     //   message: `Error while validating User: ${err.message}`,
@@ -128,32 +165,27 @@ router.post("/login", async (req, res) => {
   try {
     // const userJson = await loginSchema.validateAsync({ username, password });
     const userValid = await validateUserInformation(req.body);
-    // if (!userValid.status) {
-    //   return res
-    //     .status(401)
-    //     .json({ status: false, message: userValid.message });
-    // }
+    console.log(userValid);
+    if (!userValid.status) {
+      return res
+        .status(401)
+        .json({ status: false, message: userValid.message });
+    }
     // const userData = await getUserInformation(userValid.data);
-    // if (userData.status) {
-    // const token = jwt.sign({ username }, process.env.PRIVATE_KEY, {
-    //   expiresIn: "1h",
-    // });
-    // return res
-    //   .status(200)
-    //   .cookie("token", token, {
-    //     httpOnly: true,
-    //     maxAge: 3600000,
-    //   })
-    //   .json({ status: true, data: { username, ...userValid.data } });
-    // res.cookie('token', token, {
-    //     httpOnly: true,
-    //     maxAge: 3600000
-    // });
-    // res.cookie('role', JSON.stringify(userData));
-    // return res.json({ status: true, message: "Success login" });
-    // } else {
-    //   return res.status(500).json({ userData });
-    // }
+    if (userValid.status) {
+      const token = jwt.sign({ username }, process.env.PRIVATE_KEY, {
+        expiresIn: "1h",
+      });
+      return res
+        .status(200)
+        .cookie("token", token, {
+          httpOnly: true,
+          maxAge: 3600000,
+        })
+        .json({ status: true, data: { username, ...userValid.data } });
+    } else {
+      return res.status(500).json({ userData });
+    }
   } catch (err) {
     console.log(err);
     // if (err.isJoi == true) {
@@ -167,7 +199,34 @@ router.post("/login", async (req, res) => {
     // }
   }
 });
+router.post("/register", async (req, res) => {
+  try {
+    const { username, email } = req.body;
+    // Lakukan validasi
+    // const asd = await isUserExist(email);
+    if (await isUserExist(email)) {
+      console.log(await isUserExist(email));
+      return res
+        .status(403)
+        .json({ status: false, message: "User already exist!" });
+    }
+    // Masukin DB
+    const id = await insertUserToDatabase(req.body);
 
+    // Create Token
+    const token = jwt.sign({ username, email }, process.env.TOKEN_PRIVATE_KEY, {
+      expiresIn: "20m",
+    });
+    console.log(token);
+
+    // Kirim token ke email
+    // sendEmail(email, token, "Register User");
+    return res.json({ status: true, message: "Email has been sent!" });
+  } catch (err) {
+    // console.log(err);
+    // return res.json({ status: false, message: err.message });
+  }
+});
 router.post("/logout", (req, res) => {
   try {
     res.clearCookie("role");

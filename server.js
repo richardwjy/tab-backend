@@ -1,8 +1,9 @@
-const express = require("express");
 const dotnev = require("dotenv");
+dotnev.config();
+
+const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-dotnev.config();
 const app = express();
 const PORT = 3000;
 
