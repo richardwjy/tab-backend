@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const OAuth = require("../../services/oauth");
-const { axiosGet } = require("../../services/axios");
+const { netsuiteGet } = require("../../services/netsuite");
 const { Client } = require('pg');
 
 router.get('/generate-oauth', async (req, res) => {
@@ -15,7 +15,7 @@ router.get('/generate-oauth', async (req, res) => {
 router.get('/how-to-get', async (req, res) => {
     // http://localhost:5000/v1/api/tutorial/how-to-get
     try {
-        const { data } = await axiosGet({ script: 323, deploy: 1 })
+        const { data } = await netsuiteGet({ script: 323, deploy: 1 })
         return res.json(data);
     } catch (err) {
         console.log(err.response);
