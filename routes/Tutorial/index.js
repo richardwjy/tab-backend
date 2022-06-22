@@ -14,8 +14,9 @@ router.get('/generate-oauth', async (req, res) => {
 
 router.get('/how-to-get', async (req, res) => {
     // http://localhost:5000/v1/api/tutorial/how-to-get
+    const { query } = req;
     try {
-        const { data } = await netsuiteGet({ script: 323, deploy: 1 })
+        const { data } = await netsuiteGet({ ...query })
         return res.json(data);
     } catch (err) {
         console.log(err.response);
