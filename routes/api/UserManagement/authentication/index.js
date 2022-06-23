@@ -154,9 +154,8 @@ const sendEmail = (emailaddress, token) => {
     html: `
         <p>Please ignore this email if you never requested to change password</p>
         
-        <p>Your reset password link is : <a href=${
-          baseUrl + "/change-password/" + token
-        }>Reset password</a>
+        <p>Your reset password link is : <a href=${baseUrl + "/change-password/" + token
+      }>Reset password</a>
         This link is only alive for 20 minutes!</p>
         `,
   };
@@ -233,8 +232,8 @@ router.post("/register", async (req, res) => {
     // sendEmail(email, token, "Register User");
     return res.json({ status: true, message: "Email has been sent!" });
   } catch (err) {
-    // console.log(err);
-    // return res.json({ status: false, message: err.message });
+    console.log(err);
+    return res.json({ status: false, message: err.message });
   }
 });
 router.post("/logout", (req, res) => {
