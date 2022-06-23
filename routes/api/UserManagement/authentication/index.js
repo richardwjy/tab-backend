@@ -3,8 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const format = require("pg-format");
-// const sworm = require('sworm')
-
+const pool = require("../../../../config/db");
 const config = require("../../../../config/db");
 const {
   loginSchema,
@@ -14,8 +13,11 @@ const {
 
 const router = express.Router();
 
-const UserTable = process.env.MS_USER;
-const pool = require("../../../../config/db");
+const UserTable = process.env.ms_user;
+const RolesAssingmentTable = process.env.roles_assignment;
+const RolesTable = process.env.ms_roles;
+const MenuDTable = process.env.ms_detail;
+const ControllerTable = process.env.ms_controller;
 
 const isUserExist = async (email, callback) => {
   let results = false;
@@ -97,36 +99,44 @@ const validateUserInformation = async (user) => {
   }
 };
 
-// const getUserInformation = async (user) => {
-//   const { id } = user;
-//   const listController = [];
-//   const listDataAccess = [];
-//   try {
-//     const records = await db.query(`
-//             SELECT * FROM ${RolesAssingmentTable} ra
-//             JOIN ${RolesTable} mr ON ra.ROLES_ID = mr.ID
-//             JOIN ${MenuDTable} md ON mr.MENU_H_ID = md.MENU_H_ID
-//             JOIN ${ControllerTable} mc ON md.CONTROLLER_ID = mc.ID
-//             WHERE ra.USER_ID=${id} and md.IS_ACTIVE = '1'
-//         `);
-//
-//     for (const record of records) {
-//       if (
-//         listController.find((el) => el == record.controller_name) == undefined
-//       ) {
-//         // Remove Duplicate controller_name data
-//         listController.push(record.controller_name);
-//       }
-//       if (listDataAccess.find((el) => el == record.data_access) == undefined) {
-//         // Remove Duplicate data_access data
-//         listDataAccess.push(record.data_access);
-//       }
-//     }
-//     return { status: true, data: { listController, listDataAccess } };
-//   } catch (err) {
-//     return { status: false, message: err.message };
-//   }
-// };
+const getUserInformation = async (user) => {
+  const { id } = user;
+  const listController = [];
+  const listDataAccess = [];
+  try {
+    const client = await pool.connect();
+    const query = {
+      text: `SELECT * FROM ${RolesAssingmentTable} ra
+      JOIN ${RolesTable} mr ON ra.ROLES_ID = mr.ID
+      JOIN ${MenuDTable} md ON mr.MENU_H_ID = md.MENU_H_ID
+      JOIN ${ControllerTable} mc ON md.CONTROLLER_ID = mc.ID
+      WHERE ra.USER_ID=$1 and md.IS_ACTIVE = '1'`,
+      values: [id],
+    };
+    const res = await client.query(query);
+    client.release();
+    console.log(res.rows[0]);
+    const records = res.rows;
+
+    for (const record of records) {
+      if (
+        listController.find((el) => el == record.controller_name) == undefined
+      ) {
+        // Remove Duplicate controller_name data
+        console.log(record, "controller_name");
+        listController.push(record.controller_name);
+      }
+      if (listDataAccess.find((el) => el == record.data_access) == undefined) {
+        console.log(record, "data_access");
+        // Remove Duplicate data_access data
+        listDataAccess.push(record.data_access);
+      }
+    }
+    return { status: true, data: { listController, listDataAccess } };
+  } catch (err) {
+    return { status: false, message: err.message };
+  }
+};
 
 const sendEmail = (emailaddress, token) => {
   const baseUrl = process.env.redirect_url;
@@ -171,8 +181,8 @@ router.post("/login", async (req, res) => {
         .status(401)
         .json({ status: false, message: userValid.message });
     }
-    // const userData = await getUserInformation(userValid.data);
-    if (userValid.status) {
+    const userData = await getUserInformation(userValid.data);
+    if (userData.status) {
       const token = jwt.sign({ username }, process.env.PRIVATE_KEY, {
         expiresIn: "1h",
       });
@@ -182,21 +192,21 @@ router.post("/login", async (req, res) => {
           httpOnly: true,
           maxAge: 3600000,
         })
-        .json({ status: true, data: { username, ...userValid.data } });
+        .json({ status: true, data: { username, ...userData.data } });
     } else {
       return res.status(500).json({ userData });
     }
   } catch (err) {
     console.log(err);
-    // if (err.isJoi == true) {
-    //   // Check if contain password regex , change message
-    //   err.status = 422;
-    //   return res
-    //     .status(err.status)
-    //     .json({ status: false, message: err.details[0].message });
-    // } else {
-    //   return res.status(500).json({ status: false, message: err.message });
-    // }
+    if (err.isJoi == true) {
+      // Check if contain password regex , change message
+      err.status = 422;
+      return res
+        .status(err.status)
+        .json({ status: false, message: err.details[0].message });
+    } else {
+      return res.status(500).json({ status: false, message: err.message });
+    }
   }
 });
 router.post("/register", async (req, res) => {
