@@ -12,6 +12,7 @@ const MenuDetailTable = process.env.ms_detail;
 
 const FormTable = process.env.ms_form;
 const ControllerTable = process.env.ms_controller;
+const buildQuery = require("../../../../services/queryBuilder");
 // router.use(verifyToken);
 
 const getListHeaderId = (headers) => {
@@ -278,6 +279,7 @@ router.put("/", async (req, res) => {
     var params = Object.keys(updateHeaderMenu).map(function (key) {
       return updateHeaderMenu[key];
     });
+    console.log(query, params);
 
     const result = await client.query(query, params);
     const updateMenuHeader = result.rows[0];

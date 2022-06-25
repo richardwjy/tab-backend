@@ -9,6 +9,7 @@ const {
   loginSchema,
   updatePasswordSchema,
 } = require("../../../../model/authSchema");
+const buildQuery = require("../../../../services/queryBuilder");
 // const verifyToken = require("../../verifyToken");
 
 const router = express.Router();
@@ -23,11 +24,21 @@ const isUserExist = async (email, callback) => {
   let results = false;
   try {
     const client = await pool.connect();
-    const query = {
-      text: `SELECT * FROM ${UserTable} where email = $1`,
-      values: [email],
-    };
-    const res = await client.query(query);
+    const { status, query } = await buildQuery("SELECT", {
+      table: UserTable,
+      filter: {
+        email,
+      },
+    });
+
+    if (!status) {
+      return {
+        status: false,
+        message: "Your Missing Parameter in Query Builder",
+      };
+    }
+
+    const res = await client.query(query, [email]);
     client.release();
     if (res.rows.length > 0) {
       console.log("Enter");
@@ -67,11 +78,21 @@ const validateUserInformation = async (user) => {
     const { username, password } = user;
 
     const client = await pool.connect();
-    const query = {
-      text: `SELECT * FROM ${UserTable} where username = $1`,
-      values: [username],
-    };
-    const res = await client.query(query);
+
+    const { status, query } = await buildQuery("SELECT", {
+      table: UserTable,
+      filter: {
+        username,
+      },
+    });
+
+    if (!status) {
+      return {
+        status: false,
+        message: "Your Missing Parameter in Query Builder",
+      };
+    }
+    const res = await client.query(query, [username]);
     client.release();
     // console.log(res.rows[0]);
     const record = res.rows;
@@ -154,8 +175,9 @@ const sendEmail = (emailaddress, token) => {
     html: `
         <p>Please ignore this email if you never requested to change password</p>
         
-        <p>Your reset password link is : <a href=${baseUrl + "/change-password/" + token
-      }>Reset password</a>
+        <p>Your reset password link is : <a href=${
+          baseUrl + "/change-password/" + token
+        }>Reset password</a>
         This link is only alive for 20 minutes!</p>
         `,
   };
