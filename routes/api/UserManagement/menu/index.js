@@ -20,7 +20,7 @@ const getListHeaderId = (headers) => {
   headers.forEach((obj) => {
     listId.push(obj.id);
   });
-  return listId.join(",");
+  return listId;
 };
 
 function updateTablebyId(table, id, cols, where) {
@@ -59,12 +59,22 @@ router.get("/header", async (req, res) => {
     const listHeaderId = getListHeaderId(headerRecords);
     console.log(listHeaderId);
 
+    var set = [];
+    var q = ["IN "];
+    console.log(listHeaderId);
+    Object.keys(listHeaderId).forEach(function (key, i) {
+      set.push("$" + (i + 1));
+      console.log(set, key);
+    });
+    // q = q.push();
+    // console.log(q, "asd");
     query = {
       text: `SELECT md.*,mc.controller_name FROM ${MenuDetailTable} md
         JOIN ${ControllerTable} mc ON md.controller_id = mc.id
-        WHERE md.MENU_H_ID IN ($1)`,
-      values: [listHeaderId],
+        WHERE md.MENU_H_ID IN (${set.join(", ")})`,
+      values: listHeaderId,
     };
+    console.log(query);
 
     result = await client.query(query);
     const detailRecords = result.rows;
