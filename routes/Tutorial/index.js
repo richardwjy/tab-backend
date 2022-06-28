@@ -67,13 +67,14 @@ router.get("/how-to-connect-psql", async (req, res) => {
 // Query Builder Update By ID buat PG : pake services hanya return query dan status
 router.get("/update-query", async (req, res) => {
   try {
-    const { query, status } = buildQuery("UPDATE_BYID", {
+    const { status, query } = buildQuery("UPDATE_BYID", {
       cols: {
         id: 1,
         name: "eric",
       },
       table: "name",
     });
+    console.log(status, query);
 
     if (!status) {
       return res.status(422).json({ status });
@@ -92,6 +93,40 @@ router.get("/update-query", async (req, res) => {
     // })
   } catch (err) {
     // console.error(err);
+    // return res.status(200).json({ status: false, message: err })
+  }
+});
+
+// Query Builder INSERT  buat PG : pake services hanya return query dan status
+router.get("/insert-query", async (req, res) => {
+  try {
+    const { status, query } = buildQuery("INSERT", {
+      cols: {
+        name: "eric",
+        email: "eric@gmail.com",
+      },
+      table: "Users",
+    });
+    console.log(status, query);
+    // console.log(query);
+
+    if (!status) {
+      return res.status(422).json({ status });
+    }
+
+    return res.status(200).json(query);
+    // const client = new Client();
+    // client.connect();
+    // client.query(`SELECT * FROM MS_USERS ORDER BY id ASC`, (error, results) => {
+    //     if (error) {
+    //         console.error(error);
+    //         return res.status(200).json({ status: false, message: error })
+    //     }
+    //     client.end();
+    //     return res.status(200).json(results.rows);
+    // })
+  } catch (err) {
+    console.error(err);
     // return res.status(200).json({ status: false, message: err })
   }
 });

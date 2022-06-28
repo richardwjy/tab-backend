@@ -24,7 +24,7 @@ const isUserExist = async (email, callback) => {
   let results = false;
   try {
     const client = await pool.connect();
-    const { status, query } = await buildQuery("SELECT", {
+    const { status, query } = buildQuery("SELECT", {
       table: UserTable,
       filter: {
         email,
@@ -79,7 +79,7 @@ const validateUserInformation = async (user) => {
 
     const client = await pool.connect();
 
-    const { status, query } = await buildQuery("SELECT", {
+    const { status, query } = buildQuery("SELECT", {
       table: UserTable,
       filter: {
         username,

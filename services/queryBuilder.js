@@ -1,4 +1,4 @@
-const buildQuery = async (type, params) => {
+const buildQuery = (type, params) => {
   let query;
 
   let set = [];
@@ -6,16 +6,20 @@ const buildQuery = async (type, params) => {
     case "SELECT":
       //select butuh params.table dan params.filter untuk where
       query = [`SELECT * FROM ${params.table}`];
-      query.push("WHERE");
-      Object.keys(params.filter).forEach(function (key, i) {
-        set.push(key + " = ($" + (i + 1) + ")");
-      });
-      if (Object.keys(params.filter).length > 1) {
-        query.push(set.join(" AND "));
-      } else {
-        query.push(set.join(" "));
+
+      if (params.hasOwnProperty("filter")) {
+        query.push("WHERE");
+        Object.keys(params.filter).forEach(function (key, i) {
+          set.push(key + " = ($" + (i + 1) + ")");
+        });
+        if (Object.keys(params.filter).length > 1) {
+          query.push(set.join(" AND "));
+        } else {
+          query.push(set.join(" "));
+        }
       }
       query = query.join(" ");
+
       break;
     case "UPDATE_BYID":
       //contoh filtering
@@ -41,11 +45,27 @@ const buildQuery = async (type, params) => {
       query = query.join(" ");
       break;
 
+    case "INSERT":
+      query = [`INSERT INTO ${params.table} (`];
+      Object.keys(params.cols).forEach(function (key, i) {
+        set.push(key);
+      });
+      let setVal = [];
+      query.push(set.join(", "));
+      query.push(") VALUES (");
+      Object.keys(params.cols).forEach(function (key, i) {
+        setVal.push("$" + (i + 1));
+      });
+      query.push(setVal.join(", "));
+      query.push(") RETURNING id");
+      query = query.join(" ");
+      break;
+
     default:
       break;
   }
-
-  return { status: true, query };
+  // console.log(query);
+  return { query, status: true };
 };
 
 module.exports = buildQuery;
